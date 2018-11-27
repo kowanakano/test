@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>Timer</title>
+    <style>
+        body{
+            font-family: 'Courier New' , sans-serif;
+            font-size: 14px;
+            background: #eee;
+        }
+        .container{
+            margin: 20px auto;
+            width: 365px;
+            background: #fff;
+            padding: 15px;
+            text-align: center;
+
+        }
+        #timer{
+            background: #ddd;
+            height: 120px;
+            line-height: 120px;
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        .controls > div{
+            cursor: pointer;
+            user-select: none;
+            width: 80px;
+            background: #ddd;
+            height: 45px;
+            line-height: 45px;
+            float: left;
+        }
+        .controls{
+            overflow: hidden;
+        }
+        .controls div + div {
+            margin-left: 15px;
+        }
+        .controls > div:hover{
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="timer">00:00.000</div>
+        <div class = "controls">
+            <div id = "min">Min</div>
+            <div id = "sec">Sec</div>
+            <div id = "reset">Reset</div>
+            <div id = "start">Start</div>
+         </div>   
+    </div>
+    
+    <script>
+        (function(){
+            'use strict';
+
+            var timer = document.getElementById('timer');
+            var min = document.getElementById('min');
+            var sec = document.getElementById('sec');
+            var reset = document.getElementById('reset');
+            var start = document.getElementById('start');
+            
+            var startTime;
+            //スタートボタンが押された時間を管理
+            var timeLeft;
+            //残り時間を管理
+            var timeToCountDown = 0;
+            //カウントダウンしたい時間を管理
+            var TimeId;
+            //clearTimeoutに対する引数管理
+            var isRunning = false;
+            //カウントダウンタイマーの状態管理
+
+            function updateTimer(t){
+                //表示用に計算結果を変換するfunction
+                //new Date()関数は1970年…からの経過時間をミリ秒でとってきている
+                //→つまり、この関数の中でミリ秒を分や、秒に直す関数を利用すると簡単に変換できる
+                var d = new Date(t);
+                var m = d.getMinutes();
+                var s = d.getSeconds();
+                var ms = d.getMilliseconds();
+                var timerString;
+                m = ('0' + m).slice(-2);
+                s = ('0' + s).slice(-2);
+                ms = ('00' + ms).slice(-3);
+                timerString = m + ':' + s + '.' + ms ;
+                timer.textContent = timerString;
+                document.title = timerString;
+            }
+
+            
+            function countDown(){
+                TimeId =   setTimeout(function(){
+                     
+                    var elapsedTime = Date.now() - startTime;
+                    //経過時間を管理
+                    timeLeft = timeToCountDown - elapsedTime;
+                    
+                    if(timeLeft < 0){
+                        isRunning = false;
+                        start.textContent = 'Start';
+                        //残り時間が0になったら、カウントダウン終了
+                        clearTimeout(TimeId);
+                        //setTimeoutを終了させる関数
+                        timeLeft = 0;
+                        updateTimer(timeLeft);
+                        //ミリ秒の関係でtimeLeftが０にならない場合があるのであえて最後0を入れてあげて再換算
+                        timeToCountDown = 0;
+                        //カウントダウンの時間をリセットしてあげる
+                        return;
+                    }
+
+                    updateTimer(timeLeft);
+                    countDown();
+
+                },10);
+            }
+
+            start.addEventListener('click',function(){
+                if(isRunning === false){
+                    isRunning = true;
+                    //ます管理状態を稼働中のtrueにする
+                    start.textContent = "Stop";
+                    //スタートボタンをストップボタンにする
+                    startTime = Date.now();
+                    countDown();
+                }else{
+                    //ストップウォッチが稼働中の状態
+                    isRunning = false;
+                    //管理状態を未稼働のfalseにする
+                    start.textContent = "Start";
+                    //ストップボタンをスタートボタンにする
+                    timeToCountDown = timeLeft;
+                    //カウントダウンの時間を残り時間に変更してあげる
+                    clearTimeout(TimeId);
+                    //カウントダウンを止める
+
+                }
+                
+
+            });
+
+            min.addEventListener('click',function(){
+                //タイマーが動いている状態のときは触れないようにする
+                if(isRunning === true){
+                    return;
+                }
+                timeToCountDown += 60 * 1000;
+                if(timeToCountDown >= 60 * 60 * 1000){
+                    timeToCountDown = 0;
+                }
+                updateTimer(timeToCountDown);
+            });
+
+            sec.addEventListener('click',function(){
+                if(isRunning === true){
+                    return;
+                }
+                timeToCountDown += 1000;
+                if(timeToCountDown >= 60 * 60 * 1000){
+                    timeToCountDown = 0;
+                }
+                updateTimer(timeToCountDown);
+            });
+
+            reset.addEventListener('click',function(){
+                timeToCountDown = 0;
+                updateTimer(timeToCountDown);
+            });
+
+
+
+        })();
+    </script>
+</body>
+</html>
